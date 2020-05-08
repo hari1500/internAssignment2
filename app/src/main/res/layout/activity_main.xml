@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/VerticalLayoutStyle"
+    tools:context=".MainActivity">
+
+    <TextView
+        android:id="@+id/textViewTitle"
+        android:background="@color/silver"
+        android:gravity="center"
+        android:textAlignment="center"
+        android:textSize="@dimen/titleTextSize"
+        android:paddingVertical="@dimen/titlePadding"
+        style="@style/LayoutParamsStyle"/>
+
+    <ScrollView
+        style="@style/LayoutParamsStyle">
+        <LinearLayout
+            android:id="@+id/linearLayoutQuestions"
+            android:padding="@dimen/questionsLayoutPadding"
+            style="@style/VerticalLayoutStyle"/>
+    </ScrollView>
+</LinearLayout>
