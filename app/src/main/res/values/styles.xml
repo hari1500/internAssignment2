@@ -16,6 +16,10 @@
     <style name="VerticalLayoutStyle" parent="LayoutParamsStyle">
         <item name="android:orientation">vertical</item>
     </style>
+
+    <style name="VerticalRecyclerViewStyle" parent="LayoutParamsStyle">
+        <item name="android:scrollbars">vertical</item>
+    </style>
     
     <style name="InvisibleVerticalLayoutStyle" parent="LayoutParamsStyle">
         <item name="android:visibility">invisible</item>

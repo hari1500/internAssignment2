@@ -13,11 +13,8 @@
         android:paddingVertical="@dimen/titlePadding"
         style="@style/LayoutParamsStyle"/>
 
-    <ScrollView
-        style="@style/LayoutParamsStyle">
-        <LinearLayout
-            android:id="@+id/linearLayoutQuestions"
-            android:padding="@dimen/questionsLayoutPadding"
-            style="@style/VerticalLayoutStyle"/>
-    </ScrollView>
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewQuestions"
+        android:padding="@dimen/questionsLayoutPadding"
+        style="@style/VerticalRecyclerViewStyle"/>
 </LinearLayout>

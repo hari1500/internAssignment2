@@ -1,8 +1,8 @@
 package com.example.assignment2;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
 import android.widget.TextView;
@@ -20,7 +20,9 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity {
     TextView textViewTitle;
     ArrayList<JSONObject> questionsArrayList = new ArrayList<>();
+    RecyclerView recyclerViewQuestions;
     final String surveyFileName = "survey.json", titleKey = "title", questionsKey = "questions";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,25 +30,34 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         textViewTitle = findViewById(R.id.textViewTitle);
+        recyclerViewQuestions = findViewById(R.id.recyclerViewQuestions);
         try {
             String json = getJSON(surveyFileName);
-            if(json == null || json.equals(""))
+            if(json == null || json.equals("")) {
                 return;
+            }
 
             JSONArray surveyJSONArray = new JSONArray(json);
-            if(surveyJSONArray.length() <= 0)
+            if(surveyJSONArray.length() <= 0){
                 return;
+            }
 
             JSONObject surveyJSON = surveyJSONArray.getJSONObject(0);
-            if(!(surveyJSON.has(titleKey) && surveyJSON.has(questionsKey)))
+            if(!(surveyJSON.has(titleKey) && surveyJSON.has(questionsKey))) {
                 return;
+            }
 
-            textViewTitle.setText(surveyJSON.getString("title"));
-            JSONArray questionsJSONArray = surveyJSON.getJSONArray("questions");
-            for(int i=0; i<questionsJSONArray.length(); ++i)
+            textViewTitle.setText(surveyJSON.getString(titleKey));
+            JSONArray questionsJSONArray = surveyJSON.getJSONArray(questionsKey);
+            for(int i=0; i<questionsJSONArray.length(); ++i) {
                 questionsArrayList.add(questionsJSONArray.getJSONObject(i));
+            }
 
-            addQuestions();
+            CustomListAdapter adapter = new CustomListAdapter(questionsArrayList);
+
+            recyclerViewQuestions.setHasFixedSize(true);
+            recyclerViewQuestions.setLayoutManager(new LinearLayoutManager(this));
+            recyclerViewQuestions.setAdapter(adapter);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -68,13 +79,4 @@ public class MainActivity extends AppCompatActivity {
         return json;
     }
 
-    public void addQuestions() {
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        for(int i=0; i<questionsArrayList.size(); ++i) {
-            QuestionFragment fragment = new QuestionFragment(this, questionsArrayList.get(i), (i != questionsArrayList.size()-1));
-            fragmentTransaction.add(R.id.linearLayoutQuestions, fragment);
-        }
-        fragmentTransaction.commit();
-    }
 }
