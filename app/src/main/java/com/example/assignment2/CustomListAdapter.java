@@ -1,6 +1,7 @@
 package com.example.assignment2;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -58,6 +59,8 @@ public class CustomListAdapter extends RecyclerView.Adapter<CustomListAdapter.Cu
 
     @Override
     public void onBindViewHolder(@NonNull CustomViewHolder holder, int position) {
+        Log.i("onBindViewHolder", "" + position);
+
         final JSONObject item = items.get(position);
         final String questionKey = "question", typeKey = "type", optionsKey = "options";
         if(!(item.has(questionKey) && item.has(typeKey) && item.has(optionsKey))) {
@@ -75,7 +78,7 @@ public class CustomListAdapter extends RecyclerView.Adapter<CustomListAdapter.Cu
                 options.add(optionJSONArray.getString(i));
             }
 
-            if(type.equals("Radio Button")) {
+            if(type.equals("Radio Button") && (holder.radioGroupOptions.getChildCount() == 0)) {
                 holder.radioGroupOptions.setVisibility(View.VISIBLE);
                 for(int i=0; i<options.size(); ++i) {
                     RadioButton radioButton = new RadioButton(holder.context);
@@ -83,7 +86,7 @@ public class CustomListAdapter extends RecyclerView.Adapter<CustomListAdapter.Cu
                     radioButton.setTextSize(20);
                     holder.radioGroupOptions.addView(radioButton);
                 }
-            } else if(type.equals("Check Box")) {
+            } else if(type.equals("Check Box") && (holder.radioGroupOptions.getChildCount() == 0)) {
                 holder.checkBoxOptions.setVisibility(View.VISIBLE);
                 for(int i=0; i<options.size(); ++i) {
                     CheckBox checkBox = new CheckBox(holder.context);
@@ -92,7 +95,6 @@ public class CustomListAdapter extends RecyclerView.Adapter<CustomListAdapter.Cu
                     holder.checkBoxOptions.addView(checkBox);
                 }
             }
-
         } catch (JSONException e) {
             e.printStackTrace();
         }
