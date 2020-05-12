@@ -5,6 +5,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.TextView;
 
 import org.json.JSONArray;
@@ -15,13 +16,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
-@SuppressWarnings("ResultOfMethodCallIgnored")
+    @SuppressWarnings("ResultOfMethodCallIgnored")
 public class MainActivity extends AppCompatActivity {
     TextView textViewTitle;
-    ArrayList<JSONObject> questionsArrayList = new ArrayList<>();
     RecyclerView recyclerViewQuestions;
     final String surveyFileName = "survey.json", titleKey = "title", questionsKey = "questions";
+    final String questionKey = "question", typeKey = "type", optionsKey = "options";
+
+    ArrayList<String> questionsArrayList = new ArrayList<>();
+    ArrayList<String> optionsTypeArrayList = new ArrayList<>();
+    ArrayList<ArrayList<String>> allOptionsArrayList = new ArrayList<>();
+    ArrayList<Set<Integer>> markedOptionsArrayList = new ArrayList<>();
 
 
     @Override
@@ -46,14 +54,32 @@ public class MainActivity extends AppCompatActivity {
             if(!(surveyJSON.has(titleKey) && surveyJSON.has(questionsKey))) {
                 return;
             }
-
             textViewTitle.setText(surveyJSON.getString(titleKey));
+
             JSONArray questionsJSONArray = surveyJSON.getJSONArray(questionsKey);
             for(int i=0; i<questionsJSONArray.length(); ++i) {
-                questionsArrayList.add(questionsJSONArray.getJSONObject(i));
+                JSONObject item = questionsJSONArray.getJSONObject(i);
+                if((item.has(questionKey) && item.has(typeKey) && item.has(optionsKey))) {
+                    questionsArrayList.add(item.getString(questionKey));
+                    optionsTypeArrayList.add(item.getString(typeKey));
+                    markedOptionsArrayList.add(new HashSet<Integer>());
+                    allOptionsArrayList.add(new ArrayList<String>());
+
+                    final JSONArray optionJSONArray = item.getJSONArray(optionsKey);
+                    for(int j = 0; j < optionJSONArray.length(); ++j) {
+                        allOptionsArrayList.get(i).add(optionJSONArray.getString(j));
+                    }
+                }
             }
 
-            CustomListAdapter adapter = new CustomListAdapter(questionsArrayList);
+            CustomListAdapter adapter = new CustomListAdapter(
+                    questionsArrayList,
+                    optionsTypeArrayList,
+                    allOptionsArrayList,
+                    markedOptionsArrayList
+            );
+
+            Log.v("MainActivity", ""+questionsArrayList.size());
 
             recyclerViewQuestions.setHasFixedSize(true);
             recyclerViewQuestions.setLayoutManager(new LinearLayoutManager(this));

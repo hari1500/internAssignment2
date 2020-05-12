@@ -1,11 +1,11 @@
 package com.example.assignment2;
 
-import android.content.Context;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -14,21 +14,22 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
+import java.util.Set;
 
 public class CustomListAdapter extends RecyclerView.Adapter<CustomListAdapter.CustomViewHolder> {
-    private ArrayList<JSONObject> items;
+    private ArrayList<String> questions;
+    private ArrayList<String> optionsType;
+    private ArrayList<ArrayList<String>> allOptions;
+    private ArrayList<Set<Integer>> markedOptions;
+    private final static String[] optionsTypes = { "Radio Button", "Check Box" };
 
     static class CustomViewHolder extends RecyclerView.ViewHolder {
         TextView textViewQuestion;
         RadioGroup radioGroupOptions;
         LinearLayout checkBoxOptions;
         View viewDivider;
-        Context context;
+        View currentView;
 
         CustomViewHolder(View v) {
             super(v);
@@ -37,17 +38,24 @@ public class CustomListAdapter extends RecyclerView.Adapter<CustomListAdapter.Cu
             this.radioGroupOptions  = v.findViewById(R.id.radioGroupOptions);
             this.checkBoxOptions    = v.findViewById(R.id.checkBoxOptions);
             this.viewDivider        = v.findViewById(R.id.viewDivider);
-            this.context            = v.getContext();
+            this.currentView        = v;
         }
     }
 
-    CustomListAdapter(ArrayList<JSONObject> items) {
-        this.items = items;
+    CustomListAdapter(ArrayList<String> questions,
+                      ArrayList<String> optionsType,
+                      ArrayList<ArrayList<String>> allOptions,
+                      ArrayList<Set<Integer>> marked
+    ) {
+        this.questions          = questions;
+        this.optionsType        = optionsType;
+        this.allOptions         = allOptions;
+        this.markedOptions      = marked;
     }
 
     @Override
     public int getItemCount() {
-        return items.size();
+        return questions.size();
     }
 
     @NonNull
@@ -59,44 +67,68 @@ public class CustomListAdapter extends RecyclerView.Adapter<CustomListAdapter.Cu
 
     @Override
     public void onBindViewHolder(@NonNull CustomViewHolder holder, int position) {
-        Log.i("onBindViewHolder", "" + position);
+        Log.v("onBindViewHolder", ""+position+" "+allOptions.get(position).size());
+        String type = optionsType.get(position);
+        ArrayList<String> options = allOptions.get(position);
 
-        final JSONObject item = items.get(position);
-        final String questionKey = "question", typeKey = "type", optionsKey = "options";
-        if(!(item.has(questionKey) && item.has(typeKey) && item.has(optionsKey))) {
-            return;
-        }
+        holder.textViewQuestion.setText(questions.get(position));
+        holder.viewDivider.setVisibility((position != getItemCount()-1) ? View.VISIBLE : View.INVISIBLE);
+        holder.checkBoxOptions.setVisibility(type.equals(optionsTypes[1]) ? View.VISIBLE : View.INVISIBLE);
+        holder.radioGroupOptions.setVisibility(type.equals(optionsTypes[0]) ? View.VISIBLE : View.INVISIBLE);
 
-        try {
-            holder.textViewQuestion.setText(item.getString(questionKey));
-            holder.viewDivider.setVisibility((position == getItemCount()-1) ? View.INVISIBLE : View.VISIBLE);
+        holder.checkBoxOptions.removeAllViews();
+        holder.radioGroupOptions.removeAllViews();
 
-            final String type = item.getString(typeKey);
-            final JSONArray optionJSONArray = item.getJSONArray(optionsKey);
-            ArrayList<String> options = new ArrayList<>();
-            for(int i = 0; i < optionJSONArray.length(); ++i) {
-                options.add(optionJSONArray.getString(i));
+        if(type.equals(optionsTypes[0])) {
+            for(int i=0; i<options.size(); ++i) {
+                addRadioButton(holder, options.get(i), position, i);
             }
+            if (markedOptions.get(position).size() > 0) {
+                ArrayList<Integer> markedOption = new ArrayList<Integer>(markedOptions.get(position));
+                ((RadioButton)holder.radioGroupOptions.getChildAt(markedOption.get(0))).setChecked(true);
+            }
+        } else if(type.equals(optionsTypes[1])) {
+            for(int i=0; i<options.size(); ++i) {
+                addCheckBox(holder, options.get(i), position, i);
+            }
+        }
+    }
 
-            if(type.equals("Radio Button") && (holder.radioGroupOptions.getChildCount() == 0)) {
-                holder.radioGroupOptions.setVisibility(View.VISIBLE);
-                for(int i=0; i<options.size(); ++i) {
-                    RadioButton radioButton = new RadioButton(holder.context);
-                    radioButton.setText(options.get(i));
-                    radioButton.setTextSize(20);
-                    holder.radioGroupOptions.addView(radioButton);
-                }
-            } else if(type.equals("Check Box") && (holder.radioGroupOptions.getChildCount() == 0)) {
-                holder.checkBoxOptions.setVisibility(View.VISIBLE);
-                for(int i=0; i<options.size(); ++i) {
-                    CheckBox checkBox = new CheckBox(holder.context);
-                    checkBox.setText(options.get(i));
-                    checkBox.setTextSize(20);
-                    holder.checkBoxOptions.addView(checkBox);
+    private void addRadioButton(@NonNull final CustomViewHolder holder, String optionText, final int parentIndex, final int optionIndex) {
+        RadioButton radioButton = new RadioButton(holder.currentView.getContext());
+        radioButton.setText(optionText);
+        radioButton.setTextSize(20);
+        radioButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.v("onBindViewHolder: radioButton", ""+parentIndex+" "+optionIndex+" "+markedOptions.get(parentIndex));
+                if(((CompoundButton)v).isChecked()) {
+                    markedOptions.get(parentIndex).clear();
+                    markedOptions.get(parentIndex).add(optionIndex);
+                } else {
+                    markedOptions.get(parentIndex).remove(optionIndex);
                 }
             }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        });
+        holder.radioGroupOptions.addView(radioButton);
+    }
+
+    private void addCheckBox(@NonNull final CustomViewHolder holder, String optionText, final int parentIndex, final int optionIndex) {
+        CheckBox checkBox = new CheckBox(holder.currentView.getContext());
+        checkBox.setText(optionText);
+        checkBox.setTextSize(20);
+        checkBox.setChecked(markedOptions.get(parentIndex).contains(optionIndex));
+        checkBox.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (((CompoundButton)v).isChecked()) {
+                    markedOptions.get(parentIndex).add(optionIndex);
+                } else {
+                    markedOptions.get(parentIndex).remove(optionIndex);
+                }
+            }
+        });
+
+        holder.checkBoxOptions.addView(checkBox);
     }
 }
